@@ -1,0 +1,23 @@
+type project
+owners
+    Jan Schiefer
+authors 
+    Jan Schiefer
+projectUrl
+    http://github.com/jschiefer/knackaknacka
+iconUrl
+    https://raw.githubusercontent.com/jschiefer/knackaknacka/master/docs/files/img/logo.png
+licenseUrl
+    http://github.com/jschiefer/knackaknacka/blob/master/LICENSE.txt
+requireLicenseAcceptance
+    false
+copyright
+    Copyright 2015
+tags
+    
+summary
+    Knock Knock! Who's there? KÖTBULLAR!
+description
+    Description not set
+
+

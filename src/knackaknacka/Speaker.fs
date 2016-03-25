@@ -1,5 +1,6 @@
 namespace knackaknacka
 
+#if WINDOWS
 open System.Speech.Synthesis
 
 /// Documentation for my library
@@ -26,3 +27,5 @@ module Library =
 
     let sayIpa x =
         synth.SpeakSsml(ssmlWrap x)
+
+#endif

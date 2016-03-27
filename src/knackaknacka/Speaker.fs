@@ -1,4 +1,4 @@
-namespace knackaknacka
+module knackaknacka.Speaker
 
 open System.Speech.Synthesis
 
@@ -9,20 +9,17 @@ open System.Speech.Synthesis
 ///     let h = Library.hello 1
 ///     printfn "%d" h
 ///
-module Library = 
-    
+let synth = new SpeechSynthesizer()
 
-    let synth = new SpeechSynthesizer()
-    
-    let ssmlStart = 
-        "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" \
-        xml:lang=\"en-US\"> <phoneme alphabet=\"ipa\" ph=\""
-    
-    let ssmlEnd = 
-        "\">dummy</phoneme></speak>"
+let ssmlStart = 
+    "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" \
+    xml:lang=\"en-US\"> <phoneme alphabet=\"ipa\" ph=\""
 
-    let ssmlWrap x =
-        ssmlStart + x + ssmlEnd
+let ssmlEnd = 
+    "\">dummy</phoneme></speak>"
 
-    let sayIpa x =
-        synth.SpeakSsml(ssmlWrap x)
+let ssmlWrap x =
+    ssmlStart + x + ssmlEnd
+
+let sayIpa x =
+    synth.SpeakSsml(ssmlWrap x)

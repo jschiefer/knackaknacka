@@ -5,8 +5,10 @@ open System.Text.RegularExpressions
 
 // Inspired by http://www2.hhs.se/isa/swedish/chap9.htm
 // and https://en.wikipedia.org/wiki/Swedish_alphabet
+// and https://en.wikipedia.org/wiki/Swedish_phonology
 
-type SoftVowel = 
+
+type SoftVowel =        // also: front vowel
     | E | I | Y | Ä | Ö
 
 type HardVowel = 
@@ -36,31 +38,35 @@ let Phonelist = [
     "e",    Letter(SoftVowel E)
 ] 
 
-type Vowels = { long : string; short: string}
+type Vowels = { 
+        long : string;      // Before single consonants
+        short: string }     // Before double consonants
 
 let vowels = 
     new Map<string, Vowels>(
         [
         "a", {long = "ɑː"; short = "a"}; 
-        "e", {long = "eː"; short = "ɛ"}; // Some words exceptionally have ⟨e⟩ for /ɛ/, among them words with ⟨ej⟩, 
-                                         // numerals, proper names and their derivations, and loanwords. Before 1889, 
-                                         // ⟨e⟩ for /ɛ/ and /ɛː/ was also used for many other words, in particular 
-                                         // words with ⟨je⟩ now spelled ⟨jä⟩. Many Swedes merge /ɛ/ and /e/.
-                                         // The sound /eː/ at the end of loanwords and in the last syllable of Swedish surnames is represented by ⟨é⟩.
+        "e", {long = "eː"; short = "ɛ"};    // Some words exceptionally have ⟨e⟩ for /ɛ/, among them words with ⟨ej⟩, 
+                                            // numerals, proper names and their derivations, and loanwords. Before 1889, 
+                                            // ⟨e⟩ for /ɛ/ and /ɛː/ was also used for many other words, in particular 
+                                            // words with ⟨je⟩ now spelled ⟨jä⟩. Many Swedes merge /ɛ/ and /e/.
+                                            // The sound /eː/ at the end of loanwords and in the last syllable of Swedish 
+                                            // surnames is represented by ⟨é⟩.
         "i", {long = "iː"; short = "ɪ"};
-        "o", {long = "uː"; short = "ɔ"}; //	The phoneme /ʊ/ is relatively infrequent; short ⟨o⟩ more often represents /ɔ/. In a few words, long ⟨o⟩ represents /oː/.
+        "o", {long = "uː"; short = "ɔ"};    //	The phoneme /ʊ/ is relatively infrequent; short ⟨o⟩ more often represents /ɔ/. 
+                                            // In a few words, long ⟨o⟩ represents /oː/.
         "u", {long = "ʉː"; short = "ɵ"};
         "y", {long = "yː"; short = "ʏ"};
-        "å", {long = "oː"; short = "ɔ"}; //	Most words with /ɔ/ and some words with /oː/ are spelled with ⟨o⟩.
-        "ä", {long = "ɛː"; short = "ɛ"}; //	Some words with /ɛ/ are spelled with ⟨e⟩.
-        "ö", {long = "øː"; short = "œ"}; //	The short ö is, in some dialects, pronounced as /ɵ/.
+        "å", {long = "oː"; short = "ɔ"};    //	Most words with /ɔ/ and some words with /oː/ are spelled with ⟨o⟩.
+        "ä", {long = "ɛː"; short = "ɛ"};    //	Some words with /ɛ/ are spelled with ⟨e⟩.
+        "ö", {long = "øː"; short = "œ"};    //	The short ö is, in some dialects, pronounced as /ɵ/.
         ])
 
 let consonants =
     new Map<string, string>(
         [
         "b", "b";
-        "c", "s"    // before front vowels, ⟩, otherwise /k/. ⟨e i y ä ö⟩. The letter ⟨c⟩ alone 
+        "c", "s"    // before front vowels, otherwise /k/. ⟨e i y ä ö⟩. The letter ⟨c⟩ alone 
                     // is used only in loanwords (usually in the /s/ value) and proper names, 
                     // but ⟨ck⟩ is a normal representation for /k/ after a short vowel (as in 
                     // English and German).

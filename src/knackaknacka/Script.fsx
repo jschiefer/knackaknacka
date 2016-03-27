@@ -4,10 +4,10 @@
 #load "NaiveSwedish.fs"
 
 open System.Text.RegularExpressions
-// open knackaknacka.Speaker
+open knackaknacka.Speaker
 open knackaknacka.NaiveSwedish
 
-// sayIpa "təmei̥ɾou̥"
+sayIpa "təmei̥ɾou̥"
 
 let isVowel = function
     | HardVowel h -> "yes"
@@ -19,11 +19,6 @@ let b = a.Groups.[1].Captures |> Seq.cast<Capture> |> Seq.map (fun x -> x.Value)
 
 let c = tokenize "abeecec"
 
-let m = 
-    new Map<string, string>(
-        [
-        "hello", "world"; 
-        "foo", "bar"
-        ])
 
-m.TryFind "helo"
+vowels.TryFind "a"
+

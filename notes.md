@@ -7,3 +7,8 @@
 * ch, -ge, rs, sch, sh, sj, sk, skj, stj
 * handling vowels before single/double consonants
 * all the spellings for the Spellings for the sje-phoneme /ɧ/
+
+matchPhoneme should extract the longest possible string that matches to a phoneme, and 
+return the phoneme, and the rest of the string.
+
+So for each phoneme, there is one branch

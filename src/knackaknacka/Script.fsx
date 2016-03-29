@@ -59,8 +59,8 @@ let (|TheMatch|_|) pattern input =
         else None
 
 
-let translatePhoneme word =
-    match word with
+let translatePhoneme letters =
+    match letters with
     | TheMatch @"ee" (mtch, rest) -> Some("E", mtch)
     | _ -> None
 

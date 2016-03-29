@@ -71,7 +71,7 @@ let consonants =
                     // but ⟨ck⟩ is a normal representation for /k/ after a short vowel (as in 
                     // English and German).
         "c", "k";
-        "ch", "ɧ";  // In loanwords. The conjunction 'och' (and) is pronounced /ɔk/ or /ɔ/.
+        // "ch", "ɧ";  // In loanwords. The conjunction 'och' (and) is pronounced /ɔk/ or /ɔ/.
         "ch", "ɕ"; 
         "d", "d";
         "dj", "j";

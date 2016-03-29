@@ -1,5 +1,5 @@
 module knackaknacka.Speaker
-
+#if false
 open System.Speech.Synthesis
 
 /// Documentation for my library
@@ -23,3 +23,5 @@ let ssmlWrap x =
 
 let sayIpa x =
     synth.SpeakSsml(ssmlWrap x)
+
+#endif

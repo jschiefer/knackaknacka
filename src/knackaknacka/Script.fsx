@@ -50,18 +50,57 @@ let parseString str =
     | _ -> 
         None
 
-let (|TheMatch|_|) pattern input =
+let splitterOffer string = 
+    ()
+    
+let rec step1 list =
+    match list with
+        | [] -> 
+            "Done"
+        | x :: xs -> 
+            printfn "Encountered %A" x
+            step1 xs
+
+step1 [1..5]    
+
+let (|RegexMatch|_|) pattern input =
     if input = null then None
     else
-        let metaPattern = sprintf @"^(%s)(.+)$" pattern
+        let metaPattern = sprintf @"^(%s)((?s).*)" pattern
         let m = Regex.Match(input, metaPattern)
-        if m.Success then Some (m.Groups.[1], m.Groups.[2])
+        if m.Success then Some [m.Groups.[1].Value; m.Groups.[2].Value]
         else None
 
-
-let translatePhoneme letters =
+let rec translatePhoneme letters =
     match letters with
-    | TheMatch @"ee" (mtch, rest) -> Some("E", mtch)
+    | RegexMatch @"ee" [mtch; rest] -> ["E"; rest] |> Some
+    | RegexMatch @"(a|b)" [mtch; rest] -> ["A or B"; rest] |> Some
     | _ -> None
 
- translatePhoneme "eedd"
+translatePhoneme "eeabcde"
+
+let rec chop word =
+    match word with
+    | RegexMatch "." [mtch; rest] -> 
+        printfn "Found %A" mtch
+        printfn "Rest is %A" rest
+        chop rest
+    | _ ->
+        printfn "Nothing"
+
+
+let chop2 word = 
+    let rec filterUtil word acc = 
+        match word with 
+        | RegexMatch "." [mtch; rest] -> 
+            printfn "matched %A" mtch 
+            filterUtil rest (mtch::acc)
+        | _ ->  
+            printfn "Done" 
+            List.rev acc;    
+    filterUtil word []
+
+
+
+
+let a = chop2 "Fugu"

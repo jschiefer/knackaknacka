@@ -11,13 +11,7 @@
 matchPhoneme should extract the longest possible string that matches to a phoneme, and 
 return the phoneme, and the rest of the string.
 
-So for each phoneme, there is one branch
+Need to figure out the correct backreferences in all cases, particularly in cases of 
+"x before y" rules. Named backreferences may be the answer.
 
-start with a string and an empty list, and end up with a list of strings containing
-the individual characters.
-
-Every step: 
-- remove first element of list (theString)
-- Split the first character off the string
-- Add the new string to the beginning of the list
-- Add the new character to the end of the list
+Also will need proper backreferences to correctly detect double consonants.

@@ -1,11 +1,19 @@
+#if INTERACTIVE
+#r "bin/Debug/knackaknacka.dll "
+#r "../../packages/test/NUnit/lib/nunit.framework.dll"
+#else
 module knackaknacka.Tests
+#endif
 
 open NUnit.Framework
 open knackaknacka.NaiveSwedish
 
 [<Test>]
-let ``c followed by hardvowel``() =
-    let x = tokenize "CA"
-    Assert.NotNull(x)
-    let count = x |> Seq.length
-    Assert.AreEqual(2, count)
+let ``short a``() =
+    let inputString = "att"
+    let pattern = "(" + "(a)" + followedByDoubleConsonants + "|" + "a)"
+    let blah = ipaTranslateWithPattern pattern inputString
+    let count = blah |> Seq.length
+    Assert.AreEqual(1, count)
+
+

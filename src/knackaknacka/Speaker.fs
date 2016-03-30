@@ -1,14 +1,7 @@
 module knackaknacka.Speaker
-#if false
+
 open System.Speech.Synthesis
 
-/// Documentation for my library
-///
-/// ## Example
-///
-///     let h = Library.hello 1
-///     printfn "%d" h
-///
 let synth = new SpeechSynthesizer()
 
 let ssmlStart = 
@@ -23,5 +16,3 @@ let ssmlWrap x =
 
 let sayIpa x =
     synth.SpeakSsml(ssmlWrap x)
-
-#endif

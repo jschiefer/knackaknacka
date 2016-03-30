@@ -7,63 +7,29 @@ open System.Text.RegularExpressions
 // and https://en.wikipedia.org/wiki/Swedish_alphabet
 // and https://en.wikipedia.org/wiki/Swedish_phonology
 
-
-type SoftVowel =        // also: front vowel
-    | E | I | Y | Ä | Ö
-
-type HardVowel = 
-    | A | O | U | Ø
-
-type Consonant = 
-    | B | C | D | F | G | H | J | K | L | M | N | P | Q | R | S | T | V | W | X | Y | Z
-
-type Letter =
-    | SoftVowel of SoftVowel
-    | HardVowel of HardVowel
-    | Consonant of Consonant
-
-type Group =
-    | EE | AA | BB
-
-type Grapheme =
-    | Letter of Letter
-    | Group of Group
-
-let Phonelist = [ 
-    "ee",   Group(EE)
-    "a",    Letter(HardVowel A)
-    "b",    Letter(Consonant B)
-    "c",    Letter(Consonant C) 
-    "d",    Letter(Consonant D) 
-    "e",    Letter(SoftVowel E)
-] 
-
-type Vowels = { 
-        long : string;      // Before single consonants
-        short: string }     // Before double consonants
-
+/// Vowels are assumed to be short before double consonants, long in all other cases
+type Vowel = { long : string; short: string; soft : bool }
 let vowels = 
-    new Map<string, Vowels>(
         [
-        "a", {long = "ɑː"; short = "a"}; 
-        "e", {long = "eː"; short = "ɛ"};    // Some words exceptionally have ⟨e⟩ for /ɛ/, among them words with ⟨ej⟩, 
+        "a", {long = "ɑː"; short = "a"; soft = false}; 
+        "e", {long = "eː"; short = "ɛ"; soft = true};    // Some words exceptionally have ⟨e⟩ for /ɛ/, among them words with ⟨ej⟩, 
                                             // numerals, proper names and their derivations, and loanwords. Before 1889, 
                                             // ⟨e⟩ for /ɛ/ and /ɛː/ was also used for many other words, in particular 
                                             // words with ⟨je⟩ now spelled ⟨jä⟩. Many Swedes merge /ɛ/ and /e/.
                                             // The sound /eː/ at the end of loanwords and in the last syllable of Swedish 
                                             // surnames is represented by ⟨é⟩.
-        "i", {long = "iː"; short = "ɪ"};
-        "o", {long = "uː"; short = "ɔ"};    //	The phoneme /ʊ/ is relatively infrequent; short ⟨o⟩ more often represents /ɔ/. 
+        "i", {long = "iː"; short = "ɪ"; soft = true};
+        "o", {long = "uː"; short = "ɔ"; soft = false};    //	The phoneme /ʊ/ is relatively infrequent; short ⟨o⟩ more often represents /ɔ/. 
                                             // In a few words, long ⟨o⟩ represents /oː/.
-        "u", {long = "ʉː"; short = "ɵ"};
-        "y", {long = "yː"; short = "ʏ"};
-        "å", {long = "oː"; short = "ɔ"};    //	Most words with /ɔ/ and some words with /oː/ are spelled with ⟨o⟩.
-        "ä", {long = "ɛː"; short = "ɛ"};    //	Some words with /ɛ/ are spelled with ⟨e⟩.
-        "ö", {long = "øː"; short = "œ"};    //	The short ö is, in some dialects, pronounced as /ɵ/.
-        ])
+        "u", {long = "ʉː"; short = "ɵ"; soft = false};
+        "y", {long = "yː"; short = "ʏ"; soft = true};
+        "å", {long = "oː"; short = "ɔ"; soft = false};    //	Most words with /ɔ/ and some words with /oː/ are spelled with ⟨o⟩.
+        "ä", {long = "ɛː"; short = "ɛ"; soft = true};    //	Some words with /ɛ/ are spelled with ⟨e⟩.
+        "ö", {long = "øː"; short = "œ"; soft = true};    //	The short ö is, in some dialects, pronounced as /ɵ/.
+        ]
 
+/// Consonants can be single character or multi-character
 let consonants =
-    new Map<string, string>(
         [
         "b", "b";
         "c", "s"    // before front vowels, otherwise /k/. ⟨e i y ä ö⟩. The letter ⟨c⟩ alone 
@@ -109,17 +75,46 @@ let consonants =
                     // may be pronounced /w/.
         "x", "ks"; 
         "z", "s";   // Used in loanwords and proper names.
-    ])
+    ]
 
+// Character class generation
+let makeCharacterClass list =
+    "[" + (list |> Seq.distinct |> Seq.fold (+) "") + "]"
 
-let translate word =
-    word
+let vowelFilter predicate = 
+    vowels |> Seq.map (fun (s, v) -> s, v.soft) |> Seq.filter predicate |> Seq.map fst 
+           |> makeCharacterClass
 
-let makeMatchString() =
-    let concat = Phonelist |> Seq.map (fun x -> fst x) |> String.concat "|" 
-    "(" + concat + ")"
+let softVowelClass = vowelFilter (fun (_, soft) -> soft)
 
-let tokenize str =
-    let m = Regex.Match(str, makeMatchString() + "+", RegexOptions.IgnoreCase)
-    m.Groups.[1].Captures |> Seq.cast<Capture> |> Seq.map (fun x -> x.Value) 
+let hardVowelClass = vowelFilter (fun (_, soft) -> not soft)
 
+let singleConsonantClass = 
+    consonants |> Seq.map fst |> Seq.filter (fun s -> s.Length = 1) 
+               |> makeCharacterClass
+
+let followedByDoubleConsonants = singleConsonantClass + "{2}"
+
+// Lookups
+let vowelMap = new Map<string, Vowel>(vowels)
+let consonantMap = new Map<string, string>(consonants)
+
+// Regex matching
+let (|RegexMatch|_|) pattern input =
+    if input = null || input.Equals "" then None
+    else
+        let metaPattern = sprintf @"^(%s)((?s).*)" pattern
+        let m = Regex.Match(input, metaPattern, RegexOptions.Compiled)
+        if m.Success then Some (m.Groups.[2].Value, m.Groups.[m.Groups.Count - 1].Value)
+        else None
+
+let ipaTranslateWithPattern pattern word = 
+    let rec transUtil word acc = 
+        match word with 
+        | RegexMatch pattern (mtch, rest) -> transUtil rest (mtch::acc)
+        | "" -> List.rev acc;    
+        | _ -> List.rev acc;    
+    transUtil word [] // |> Seq.fold (+) ""
+
+let ipaTranslate word = 
+    ipaTranslateWithPattern "(.)" word

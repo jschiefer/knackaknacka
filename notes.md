@@ -11,10 +11,10 @@
 matchPhoneme should extract the longest possible string that matches to a phoneme, and 
 return the phoneme, and the rest of the string.
 
-Need to figure out the correct backreferences in all cases, particularly in cases of 
-"x before y" rules. Named backreferences may be the answer.
-
 Also will need proper backreferences to correctly detect double consonants.
 
-
-Change before front vowels: c, j, k, sk, 
+Test change before front vowels: c, j, k, sk
+Make consonant lookups
+Combine all lookups into one
+Sort by the length of the first capture group, for the purpose of creating the regular expression
+Is there a way to name a character class, so it doesn't have to be repeated?

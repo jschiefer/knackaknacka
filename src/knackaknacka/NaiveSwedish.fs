@@ -103,6 +103,7 @@ let f2c = singleConsonantClass |> sprintf "(?<dc>%s)\\k<dc>"
 // Lookups
 //let pMap = new Map<string, string>()
 
+
 // Regex matching
 let (|RegexMatch|_|) pattern input =
     if input = null || input.Equals "" then None

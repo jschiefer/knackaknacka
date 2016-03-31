@@ -20,3 +20,12 @@ let pattern = "(a)" + f2c
 let a = Regex.Match("att", pattern)
 a.Groups.[1].Value
 a.Success
+
+let shortLookup = vowels |> Seq.map (fun (c, v) -> (c, v.short))
+let longPattern x = "(" + x + ")" + f2c
+let longLookup = vowels |> Seq.map (fun (c, v) -> (longPattern c, v.long))
+
+shortLookup
+longLookup
+
+(2 * vowels.Length + consonants.Length) 

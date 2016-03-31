@@ -15,3 +15,6 @@ Need to figure out the correct backreferences in all cases, particularly in case
 "x before y" rules. Named backreferences may be the answer.
 
 Also will need proper backreferences to correctly detect double consonants.
+
+
+Change before front vowels: c, j, k, sk, 

@@ -16,23 +16,7 @@ sayIpa "təmei̥ɾou̥"
 knackaknacka.Speaker.synth.GetInstalledVoices() 
 |> Seq.map (fun x -> printfn "%A" x.VoiceInfo.Name)
 
-let phonemes = ipaTranslate "abc"
-
-let minilist = [
-    "(ee)" ,"EE";
-    "(a)" + followedByDoubleConsonants ,"a";
-    "(a)", "ɑː";
-    "(b)", "b";
-    "(c)", "c";
-    "(d)", "d";
-    "(e)", "e";
-]
-
-let minimap = new Map<string, string>(minilist)
-
-let pat = "(ee|a|b|c|d|e)"
-
-let makepattern = "(" + (minilist |> Seq.map fst |> String.concat "|") + ")"
-let blah = ipaTranslateWithPattern makepattern "eeabc"
-
-hardVowelClass
+let pattern = "(a)" + f2c
+let a = Regex.Match("att", pattern)
+a.Groups.[1].Value
+a.Success

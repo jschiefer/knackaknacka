@@ -45,7 +45,7 @@ let softVowelClass = vowelFilter (fun (_, soft) -> soft)
 let b4fv = softVowelClass
 
 /// Consonants can be single character or multi-character
-let consonants =
+let consonantLookup =
         [
         "(b)", "b";
         "(c)", "s"    // before front vowels, otherwise /k/. ⟨e i y ä ö⟩. The letter ⟨c⟩ alone 
@@ -55,7 +55,7 @@ let consonants =
         "(c)" + b4fv, "k";
         // "ch", "ɧ";  // In loanwords. The conjunction 'och' (and) is pronounced /ɔk/ or /ɔ/.
         "(ch)", "ɕ"; 
-        "d()", "d";
+        "(d)", "d";
         "(dj)", "j";
         "(f)", "f";
         "(g)", "ɡ";   // /j/ before front vowels ⟨e i y ä ö⟩, otherwise /ɡ/
@@ -94,15 +94,20 @@ let consonants =
     ]
 
 let singleConsonantClass = 
-    consonants |> Seq.map fst |> Seq.filter (fun s -> s.Length = 3) 
+    consonantLookup |> Seq.map fst |> Seq.filter (fun s -> s.Length = 3) 
                |> makeCharacterClass
 
 // followed by double consonants
 let f2c = singleConsonantClass |> sprintf "(?<dc>%s)\\k<dc>" 
 
-// Lookups
-//let pMap = new Map<string, string>()
-
+let longLookup = vowels |> Seq.map (fun (c, v) -> (c, v.long)) |> List.ofSeq
+let shortPattern x = "(" + x + ")" + f2c
+let shortLookup = vowels |> Seq.map (fun (c, v) -> (shortPattern c, v.short)) |> List.ofSeq
+let allLookups = List.concat([consonantLookup; shortLookup; longLookup])
+let seBigPattern = (allLookups:(string * string) list)
+                    |> List.map fst 
+                    |> List.sortByDescending String.length
+                    |> List.fold (+) ""
 
 // Regex matching
 let (|RegexMatch|_|) pattern input =
@@ -121,5 +126,4 @@ let ipaTranslateWithPattern pattern word =
         | _ -> List.rev acc;    
     transUtil word [] // |> Seq.fold (+) ""
 
-let ipaTranslate word = 
-    ipaTranslateWithPattern "(.)" word
+let mc = ipaTranslateWithPattern seBigPattern 

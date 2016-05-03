@@ -16,4 +16,12 @@ let ``short a``() =
     let count = blah |> Seq.length
     Assert.AreEqual(1, count)
 
+[<Test>]
+let ``short a - 2``() =
+    let inputString = "att"
+    let pattern = "(a)" + f2c
+    let blah = ipaTranslateWithPattern pattern inputString
+    let count = blah |> Seq.length
+    Assert.AreEqual(1, count)
+
 

@@ -104,10 +104,12 @@ let longLookup = vowels |> Seq.map (fun (c, v) -> (c, v.long)) |> List.ofSeq
 let shortPattern x = "(" + x + ")" + f2c
 let shortLookup = vowels |> Seq.map (fun (c, v) -> (shortPattern c, v.short)) |> List.ofSeq
 let allLookups = List.concat([consonantLookup; shortLookup; longLookup])
-let seBigPattern = (allLookups:(string * string) list)
+let makePattern x  = (x:(string * string) list)
                     |> List.map fst 
                     |> List.sortByDescending String.length
-                    |> List.fold (+) ""
+                    |> List.fold (+) "|"
+
+let seBigPattern = makePattern allLookups
 
 // Regex matching
 let (|RegexMatch|_|) pattern input =

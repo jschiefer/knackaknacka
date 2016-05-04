@@ -18,3 +18,4 @@ Make consonant lookups
 Combine all lookups into one
 Sort by the length of the first capture group, for the purpose of creating the regular expression
 Is there a way to name a character class, so it doesn't have to be repeated?
+

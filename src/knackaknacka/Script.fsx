@@ -17,3 +17,15 @@ knackaknacka.Speaker.synth.GetInstalledVoices()
 
 
 mc "att"
+
+let a = [consonantLookup; shortLookup; longLookup]
+let first l = List.take 1 l
+let first3 l = List.take 3 l
+let seSmallList = a |> List.map (fun x -> first x) |> List.concat 
+let seSmallPattern = seSmallList |> makePattern
+let mat p s = Regex.Match(p, s)
+let matches p s = (mat p s).Success
+
+seSmallList
+seSmallPattern
+mat "ab." "abb" 

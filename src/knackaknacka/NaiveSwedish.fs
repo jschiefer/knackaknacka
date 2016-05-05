@@ -94,20 +94,26 @@ let consonantLookup =
     ]
 
 let singleConsonantClass = 
-    consonantLookup |> Seq.map fst |> Seq.filter (fun s -> s.Length = 3) 
-               |> makeCharacterClass
+    consonantLookup |> Seq.map fst 
+                    |> Seq.filter (fun s -> s.Length = 3) 
+                    |> Seq.map (fun s -> s.Chars 1)
+                    |> Seq.map string
+                    |> makeCharacterClass
 
 // followed by double consonants
 let f2c = singleConsonantClass |> sprintf "(?<dc>%s)\\k<dc>" 
 
-let longLookup = vowels |> Seq.map (fun (c, v) -> (c, v.long)) |> List.ofSeq
-let shortPattern x = "(" + x + ")" + f2c
+let join (xs:string list) = System.String.Join("|", xs)
+
+let longPattern x = "(" + x + ")"
+let longLookup = vowels |> Seq.map (fun (c, v) -> (longPattern c, v.long)) |> List.ofSeq
+let shortPattern x = longPattern x + f2c
 let shortLookup = vowels |> Seq.map (fun (c, v) -> (shortPattern c, v.short)) |> List.ofSeq
 let allLookups = List.concat([consonantLookup; shortLookup; longLookup])
 let makePattern x  = (x:(string * string) list)
                     |> List.map fst 
                     |> List.sortByDescending String.length
-                    |> List.fold (+) "|"
+                    |> join
 
 let seBigPattern = makePattern allLookups
 

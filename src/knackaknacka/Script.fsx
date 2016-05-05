@@ -23,9 +23,11 @@ let first l = List.take 1 l
 let first3 l = List.take 3 l
 let seSmallList = a |> List.map (fun x -> first x) |> List.concat 
 let seSmallPattern = seSmallList |> makePattern
-let mat p s = Regex.Match(p, s)
+let mat p s = Regex.Match(s, p)
 let matches p s = (mat p s).Success
 
 seSmallList
 seSmallPattern
-mat "ab." "abb" 
+(mat seSmallPattern "abb").Groups.[0]
+
+seBigPattern

@@ -15,19 +15,7 @@ sayIpa "təmei̥ɾou̥"
 knackaknacka.Speaker.synth.GetInstalledVoices() 
 |> Seq.map (fun x -> printfn "%A" x.VoiceInfo.Name)
 
+let theBigPattern = makePattern allLookups
+let mc = ipaTranslateWithPattern theBigPattern
 
-mc "att"
-
-let a = [consonantLookup; shortLookup; longLookup]
-let first l = List.take 1 l
-let first3 l = List.take 3 l
-let seSmallList = a |> List.map (fun x -> first x) |> List.concat 
-let seSmallPattern = seSmallList |> makePattern
-let mat p s = Regex.Match(s, p)
-let matches p s = (mat p s).Success
-
-seSmallList
-seSmallPattern
-(mat seSmallPattern "abb").Groups.[0]
-
-seBigPattern
+mc "att" 

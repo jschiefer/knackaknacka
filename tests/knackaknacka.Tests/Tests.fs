@@ -11,7 +11,7 @@ open knackaknacka.NaiveSwedish
 [<Test>]
 let ``short a``() =
     let inputString = "att"
-    let pattern = "(a)" + f2c
+    let pattern = "(a)" + followedByDoubleConsonant
     let blah = ipaTranslateWithPattern pattern inputString
     let count = blah |> Seq.length
     Assert.AreEqual(1, count)
@@ -19,7 +19,7 @@ let ``short a``() =
 [<Test>]
 let ``short a - 2``() =
     let inputString = "att"
-    let pattern = "(a)" + f2c
+    let pattern = "(a)" + followedByDoubleConsonant
     let blah = ipaTranslateWithPattern pattern inputString
     let count = blah |> Seq.length
     Assert.AreEqual(1, count)

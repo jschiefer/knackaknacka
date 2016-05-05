@@ -7,66 +7,78 @@ open System.Text.RegularExpressions
 // and https://en.wikipedia.org/wiki/Swedish_alphabet
 // and https://en.wikipedia.org/wiki/Swedish_phonology
 
-/// Vowels are assumed to be short before double consonants, long in all other cases
+// Vowels can be hard or soft. A soft vowel (also known as a front vowel) changes
+// the pronounciation of preciding consonants in some cases. See below in the 
+// consonants list for examples.
 type Vowel = { long : string; short: string; soft : bool }
-let vowels = 
-        [
+
+// Vowels are assumed to be short before double consonants, long in all other cases. 
+// This is probably an oversimplification
+let vowels = [
         "a", {long = "ɑː"; short = "a"; soft = false}; 
-        "e", {long = "eː"; short = "ɛ"; soft = true};    // Some words exceptionally have ⟨e⟩ for /ɛ/, among them words with ⟨ej⟩, 
-                                            // numerals, proper names and their derivations, and loanwords. Before 1889, 
-                                            // ⟨e⟩ for /ɛ/ and /ɛː/ was also used for many other words, in particular 
-                                            // words with ⟨je⟩ now spelled ⟨jä⟩. Many Swedes merge /ɛ/ and /e/.
-                                            // The sound /eː/ at the end of loanwords and in the last syllable of Swedish 
-                                            // surnames is represented by ⟨é⟩.
+        // Some words exceptionally have ⟨e⟩ for /ɛ/, among them words with ⟨ej⟩, 
+        // numerals, proper names and their derivations, and loanwords. Before 1889, 
+        // ⟨e⟩ for /ɛ/ and /ɛː/ was also used for many other words, in particular 
+        // words with ⟨je⟩ now spelled ⟨jä⟩. Many Swedes merge /ɛ/ and /e/.
+        // The sound /eː/ at the end of loanwords and in the last syllable of Swedish 
+        // surnames is represented by ⟨é⟩.
+        "e", {long = "eː"; short = "ɛ"; soft = true};    
         "i", {long = "iː"; short = "ɪ"; soft = true};
-        "o", {long = "uː"; short = "ɔ"; soft = false};    //	The phoneme /ʊ/ is relatively infrequent; short ⟨o⟩ more often represents /ɔ/. 
-                                            // In a few words, long ⟨o⟩ represents /oː/.
+        //	The phoneme /ʊ/ is relatively infrequent; short ⟨o⟩ more often represents /ɔ/. 
+        // In a few words, long ⟨o⟩ represents /oː/.
+        "o", {long = "uː"; short = "ɔ"; soft = false};    
         "u", {long = "ʉː"; short = "ɵ"; soft = false};
         "y", {long = "yː"; short = "ʏ"; soft = true};
-        "å", {long = "oː"; short = "ɔ"; soft = false};    //	Most words with /ɔ/ and some words with /oː/ are spelled with ⟨o⟩.
-        "ä", {long = "ɛː"; short = "ɛ"; soft = true};    //	Some words with /ɛ/ are spelled with ⟨e⟩.
-        "ö", {long = "øː"; short = "œ"; soft = true};    //	The short ö is, in some dialects, pronounced as /ɵ/.
+        //	Most words with /ɔ/ and some words with /oː/ are spelled with ⟨o⟩.
+        "å", {long = "oː"; short = "ɔ"; soft = false};    
+        //	Some words with /ɛ/ are spelled with ⟨e⟩.
+        "ä", {long = "ɛː"; short = "ɛ"; soft = true};    
+        //	The short ö is, in some dialects, pronounced as /ɵ/.
+        "ö", {long = "øː"; short = "œ"; soft = true};    
         ]
 
-// Character class generation
-let makeCharacterClass list =
+let makeRegexCharacterClass list =
     "[" + (list |> Seq.distinct |> Seq.fold (+) "") + "]"
 
-let vowelFilter predicate = 
-    vowels |> Seq.map (fun (s, v) -> s, v.soft) |> Seq.filter predicate |> Seq.map fst 
-           |> makeCharacterClass
+let vowelFilter pred = 
+    vowels  |> Seq.map (fun (s, v) -> s, v.soft) 
+            |> Seq.filter pred 
+            |> Seq.map fst 
+            |> makeRegexCharacterClass
 
-
-let hardVowelClass = vowelFilter (fun (_, soft) -> not soft)
-
-let softVowelClass = vowelFilter (fun (_, soft) -> soft)
-
-// before front vowel
-let b4fv = softVowelClass
+let frontVowelRegexCharacterClass = vowelFilter (fun (_, soft) -> soft)
 
 /// Consonants can be single character or multi-character
-let consonantLookup =
-        [
+let consonants = [
         "(b)", "b";
-        "(c)", "s"    // before front vowels, otherwise /k/. ⟨e i y ä ö⟩. The letter ⟨c⟩ alone 
-                    // is used only in loanwords (usually in the /s/ value) and proper names, 
-                    // but ⟨ck⟩ is a normal representation for /k/ after a short vowel (as in 
-                    // English and German).
-        "(c)" + b4fv, "k";
-        // "ch", "ɧ";  // In loanwords. The conjunction 'och' (and) is pronounced /ɔk/ or /ɔ/.
+        // /s/ before front vowels, otherwise /k/. ⟨e i y ä ö⟩. The letter ⟨c⟩ alone 
+        // is used only in loanwords (usually in the /s/ value) and proper names, 
+        // but ⟨ck⟩ is a normal representation for /k/ after a short vowel (as in 
+        // English and German).
+        "(c)" + frontVowelRegexCharacterClass, "s"      
+        "(c)", "k";
+        "(ck)", "k";
         "(ch)", "ɕ"; 
+        // REVISIT: Can't distinguish this case
+        // In loanwords. 
+        // "ch", "ɧ";   
+        // The conjunction 'och' (and) is pronounced /ɔk/ or /ɔ/.
+        "(och)", "ɔk"; 
         "(d)", "d";
         "(dj)", "j";
         "(f)", "f";
-        "(g)", "ɡ";   // /j/ before front vowels ⟨e i y ä ö⟩, otherwise /ɡ/
-        "(g)", "j";
+        // 'g' is /j/ before front vowels ⟨e i y ä ö⟩, otherwise /ɡ/
+        "(g)" + frontVowelRegexCharacterClass, "j";
+        "(g)", "ɡ";     
         "(gj)", "j";
-//        "gn", "ɡn"; // /ɡn/ word-initially; /ŋn/ elsewhere
+        // 'gn' is /ɡn/ word-initially; /ŋn/ elsewhere
+        "(^gn)", "ɡn";  
         "(gn)", "ŋn";
         "(h)", "h";
         "(hj)", "j";
         "(j)", "j";
-        "(k)" + b4fv, "ɕ";   // /ɕ/ before front vowels ⟨e i y ä ö⟩, otherwise /k/
+        // 'k' is /ɕ/ before front vowels ⟨e i y ä ö⟩, otherwise /k/
+        "(k)" + frontVowelRegexCharacterClass, "ɕ";  
         "(k)", "k";
         "(kj)", "ɕ";
         "(l)", "l";
@@ -74,48 +86,58 @@ let consonantLookup =
         "(m)", "m";
         "(n)", "n";
         "(ng)", "ŋ";
-//        "ng", "ŋɡ";
+        // REVISIT: Can't distinguish this case
+        // "ng", "ŋɡ";
         "(p)", "p";
-        "(r)", "r";   // Is pronounced as /ɾ/ in some words.
+        "(r)", "r";
         "(s)", "s";
         "(sj)", "ɧ";
-        "(sk)" + b4fv, "ɧ";  // /ɧ/ before front vowels ⟨e i y ä ö⟩, otherwise /sk/
+        // 'sk' is /ɧ/ before front vowels ⟨e i y ä ö⟩, otherwise /sk/
+        "(sk)" + frontVowelRegexCharacterClass, "ɧ"; 
         "(sk)", "sk";
         "(skj)", "ɧ";
         "(stj)", "ɧ";
         "(t)", "t";
         "(tj)", "ɕ";
-        "(v)", "v";   // Before 1906, ⟨fv, hv⟩ and final ⟨f⟩ were also used for /v/. 
-                    // Now these spellings are used in some proper names.
-        "(w)", "v";   // Rarely used (loanwords, proper names). In loanwords from English 
-                    // may be pronounced /w/.
+        // Before 1906, ⟨fv, hv⟩ and final ⟨f⟩ were also used for /v/. 
+        // Now these spellings are used in some proper names.
+        "(v)", "v";     
+        // 'w' is rarely used (loanwords, proper names). In loanwords from English 
+        // may be pronounced /w/.
+        "(w)", "v";     
         "(x)", "ks"; 
-        "(z)", "s";   // Used in loanwords and proper names.
+        // used in loanwords and proper names.
+        "(z)", "s";     
     ]
 
-let singleConsonantClass = 
-    consonantLookup |> Seq.map fst 
-                    |> Seq.filter (fun s -> s.Length = 3) 
-                    |> Seq.map (fun s -> s.Chars 1)
-                    |> Seq.map string
-                    |> makeCharacterClass
+let singleConsonantRegexCharacterClass = 
+    consonants  |> Seq.map fst 
+                |> Seq.filter (fun s -> s.Length = 3) 
+                |> Seq.map (fun s -> s.Chars 1)
+                |> Seq.map string
+                |> makeRegexCharacterClass
 
-// followed by double consonants
-let f2c = singleConsonantClass |> sprintf "(?<dc>%s)\\k<dc>" 
+let followedByDoubleConsonant = 
+    singleConsonantRegexCharacterClass 
+                |> sprintf "(?<dc>%s)\\k<dc>" 
 
-let join (xs:string list) = System.String.Join("|", xs)
+let joinRegexAlternatives (xs:string list) = System.String.Join("|", xs)
 
 let longPattern x = "(" + x + ")"
-let longLookup = vowels |> Seq.map (fun (c, v) -> (longPattern c, v.long)) |> List.ofSeq
-let shortPattern x = longPattern x + f2c
-let shortLookup = vowels |> Seq.map (fun (c, v) -> (shortPattern c, v.short)) |> List.ofSeq
-let allLookups = List.concat([consonantLookup; shortLookup; longLookup])
-let makePattern x  = (x:(string * string) list)
-                    |> List.map fst 
-                    |> List.sortByDescending String.length
-                    |> join
+let longLookup = 
+    vowels  |> Seq.map (fun (c, v) -> (longPattern c, v.long)) 
+            |> List.ofSeq
 
-let seBigPattern = makePattern allLookups
+let shortPattern x = longPattern x + followedByDoubleConsonant
+let shortLookup = 
+    vowels  |> Seq.map (fun (c, v) -> (shortPattern c, v.short)) 
+            |> List.ofSeq
+
+let allLookups = List.concat([consonants; shortLookup; longLookup])
+let makePattern (xs:(string * string) list) =
+    xs  |> List.map fst 
+        |> List.sortByDescending String.length
+        |> joinRegexAlternatives
 
 // Regex matching
 let (|RegexMatch|_|) pattern input =
@@ -134,4 +156,4 @@ let ipaTranslateWithPattern pattern word =
         | _ -> List.rev acc;    
     transUtil word [] // |> Seq.fold (+) ""
 
-let mc = ipaTranslateWithPattern seBigPattern 
+

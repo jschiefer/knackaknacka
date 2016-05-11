@@ -6,6 +6,7 @@ open System.Text.RegularExpressions
 // Inspired by http://www2.hhs.se/isa/swedish/chap9.htm
 // and https://en.wikipedia.org/wiki/Swedish_alphabet
 // and https://en.wikipedia.org/wiki/Swedish_phonology
+// and of course https://twitter.com/DUNSONnDRAGGAN
 
 // Vowels can be hard or soft. A soft vowel (also known as a front vowel) changes
 // the pronounciation of preciding consonants in some cases. See below in the 
@@ -50,64 +51,68 @@ let frontVowelRegexCharacterClass = vowelFilter (fun (_, soft) -> soft)
 
 /// Consonants can be single character or multi-character
 let consonants = [
-        "(b)", "b";
+        "(b)",    "b";
         // /s/ before front vowels, otherwise /k/. ⟨e i y ä ö⟩. The letter ⟨c⟩ alone 
         // is used only in loanwords (usually in the /s/ value) and proper names, 
         // but ⟨ck⟩ is a normal representation for /k/ after a short vowel (as in 
         // English and German).
-        "(c)" + frontVowelRegexCharacterClass, "s"      
-        "(c)", "k";
+        "(c)" + frontVowelRegexCharacterClass, 
+                "s"      
+        "(c)",  "k";
         "(ck)", "k";
         "(ch)", "ɕ"; 
         // REVISIT: Can't distinguish this case
         // In loanwords. 
         // "ch", "ɧ";   
         // The conjunction 'och' (and) is pronounced /ɔk/ or /ɔ/.
-        "(och)", "ɔk"; 
-        "(d)", "d";
+        "(och)","ɔk"; 
+        "(d)",  "d";
         "(dj)", "j";
-        "(f)", "f";
+        "(f)",  "f";
         // 'g' is /j/ before front vowels ⟨e i y ä ö⟩, otherwise /ɡ/
-        "(g)" + frontVowelRegexCharacterClass, "j";
-        "(g)", "ɡ";     
+        "(g)" + frontVowelRegexCharacterClass, 
+                "j";
+        "(g)",  "ɡ";     
         "(gj)", "j";
         // 'gn' is /ɡn/ word-initially; /ŋn/ elsewhere
-        "(^gn)", "ɡn";  
+        "(^gn)","ɡn";  
         "(gn)", "ŋn";
-        "(h)", "h";
+        "(h)",  "h";
         "(hj)", "j";
-        "(j)", "j";
+        "(j)",  "j";
         // 'k' is /ɕ/ before front vowels ⟨e i y ä ö⟩, otherwise /k/
-        "(k)" + frontVowelRegexCharacterClass, "ɕ";  
-        "(k)", "k";
+        "(k)" + frontVowelRegexCharacterClass, 
+                "ɕ";  
+        "(k)",  "k";
         "(kj)", "ɕ";
-        "(l)", "l";
+        "(l)",  "l";
         "(lj)", "j";
-        "(m)", "m";
-        "(n)", "n";
+        "(m)",  "m";
+        "(n)",  "n";
         "(ng)", "ŋ";
         // REVISIT: Can't distinguish this case
         // "ng", "ŋɡ";
-        "(p)", "p";
-        "(r)", "r";
-        "(s)", "s";
+        "(p)",  "p";
+        "(r)",  "r";
+        "(s)",  "s";
         "(sj)", "ɧ";
         // 'sk' is /ɧ/ before front vowels ⟨e i y ä ö⟩, otherwise /sk/
-        "(sk)" + frontVowelRegexCharacterClass, "ɧ"; 
+        "(sk)" + frontVowelRegexCharacterClass, 
+                "ɧ"; 
         "(sk)", "sk";
-        "(skj)", "ɧ";
-        "(stj)", "ɧ";
-        "(t)", "t";
+        "(skj)","ɧ";
+        "(stj)","ɧ";
+        "(t)",  "t";
         "(tj)", "ɕ";
         // Before 1906, ⟨fv, hv⟩ and final ⟨f⟩ were also used for /v/. 
         // Now these spellings are used in some proper names.
-        "(v)", "v";     
+        "(v)",  "v";     
         // 'w' is rarely used (loanwords, proper names). In loanwords from English 
         // may be pronounced /w/.
-        "(w)", "v";     
-        "(x)", "ks"; 
+        "(w)",  "v";     
+        "(x)",  "ks"; 
         // used in loanwords and proper names.
-        "(z)", "s";     
+        "(z)",  "s";     
     ]
 
 let singleConsonantRegexCharacterClass = 
@@ -140,20 +145,18 @@ let makePattern (xs:(string * string) list) =
         |> joinRegexAlternatives
 
 // Regex matching
-let (|RegexMatch|_|) pattern input =
+let (|FirstLevelMatch|_|) pattern input =
     if input = null || input.Equals "" then None
     else
-        let metaPattern = sprintf @"^(%s)((?s).*)" pattern
+        let metaPattern = sprintf @"(%s){1}(.*)" pattern
         let m = Regex.Match(input, metaPattern, RegexOptions.Compiled)
-        if m.Success then Some (m.Groups.[2].Value, m.Groups.[m.Groups.Count - 1].Value)
+        if m.Success then Some (m.Groups.[1].Value, m.Groups.[m.Groups.Count - 2].Value)
         else None
 
-let ipaTranslateWithPattern pattern word = 
+let ipaTranslate pattern word = 
     let rec transUtil word acc = 
         match word with 
-        | RegexMatch pattern (mtch, rest) -> transUtil rest (mtch::acc)
+        | FirstLevelMatch pattern (mtch, rest) -> transUtil rest (mtch::acc)
         | "" -> List.rev acc;    
-        | _ -> List.rev acc;    
     transUtil word [] // |> Seq.fold (+) ""
-
 

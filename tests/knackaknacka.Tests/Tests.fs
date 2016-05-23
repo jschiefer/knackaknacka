@@ -1,4 +1,4 @@
-#if INTERACTIVE
+﻿#if INTERACTIVE
 #r "bin/Debug/knackaknacka.dll "
 #r "../../packages/test/NUnit/lib/nunit.framework.dll"
 #else
@@ -8,9 +8,17 @@ module knackaknacka.Tests
 open NUnit.Framework
 open knackaknacka.NaiveSwedish
 
+[<TestFixtureSetUp>]
+let init () =
+    ()
+
+[<TestFixtureTearDown>]
+let cleanup () =
+    ()
+
 [<Test>]
-let ``short a``() =
-    let inputString = "k�ttbullar"
+let ``a is ɑː``() =
+    let inputString = "a"
     let pattern = makePattern allLookups
     let blah = ipaTranslate pattern inputString
     ()
@@ -18,12 +26,19 @@ let ``short a``() =
 //    Assert.AreEqual(2, count)
 
 [<Test>]
-let ``short a - 2``() =
-    let inputString = "att"
-    let pattern = "(a)" + followedByDoubleConsonant
+let ``at is ɑːt``() =
+    let inputString = "at"
+    let pattern = makePattern allLookups
     let blah = ipaTranslate pattern inputString
-//    let count = blah |> Seq.length
-//    Assert.AreEqual(1, count)
     ()
+//    let count = blah |> Seq.length
+//    Assert.AreEqual(2, count)
 
-
+[<Test>]
+let ``att is att``() =
+    let inputString = "att"
+    let pattern = makePattern allLookups
+    let blah = ipaTranslate pattern inputString
+    ()
+//    let count = blah |> Seq.length
+//    Assert.AreEqual(2, count)

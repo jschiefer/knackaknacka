@@ -10,12 +10,20 @@ open knackaknacka.Speaker
 
 // Say something
 sayIpa "təmei̥ɾou̥"
+sayIpa "ɕøːttbɵllɑːr"   // naive
+sayIpa "ɕœtbɵlːar"      // correct
+
 
 // Installed voices
 knackaknacka.Speaker.synth.GetInstalledVoices() 
 |> Seq.map (fun x -> printfn "%A" x.VoiceInfo.Name)
 
 let theBigPattern = makePattern allLookups
-let mc = ipaTranslateWithPattern theBigPattern
+let mc = ipaTranslate theBigPattern
 
-mc "att" 
+let f = mc "köttbullar"
+theBigPattern
+
+let metaPattern = makePattern allLookups |> sprintf @"(%s){1}(.*)" 
+
+metaPattern

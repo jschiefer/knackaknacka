@@ -19,26 +19,28 @@ let cleanup () =
 [<Test>]
 let ``a is ɑː``() =
     let inputString = "a"
-    let pattern = makePattern allLookups
-    let blah = ipaTranslate pattern inputString
-    ()
-//    let count = blah |> Seq.length
-//    Assert.AreEqual(2, count)
+    let matches = translateToIPA inputString
+    let count = matches |> Seq.length
+    Assert.AreEqual(1, count)
+    Assert.AreEqual(LongVowel 'a', matches.[0])
+
 
 [<Test>]
 let ``at is ɑːt``() =
     let inputString = "at"
-    let pattern = makePattern allLookups
-    let blah = ipaTranslate pattern inputString
-    ()
-//    let count = blah |> Seq.length
-//    Assert.AreEqual(2, count)
+    let matches = translateToIPA inputString
+    let count = matches |> Seq.length
+    Assert.AreEqual(2, count)
+    Assert.AreEqual(LongVowel 'a', matches.[0])
+    Assert.AreEqual(SingleConsonant 't', matches.[1])
 
 [<Test>]
-let ``att is att``() =
-    let inputString = "att"
-    let pattern = makePattern allLookups
-    let blah = ipaTranslate pattern inputString
-    ()
-//    let count = blah |> Seq.length
-//    Assert.AreEqual(2, count)
+let ``atta is attɑː``() =
+    let inputString = "atta"
+    let matches = translateToIPA inputString
+    let count = matches |> Seq.length
+    Assert.AreEqual(4, count)
+    Assert.AreEqual(ShortVowel 'a', matches.[0])
+    Assert.AreEqual(SingleConsonant 't', matches.[1])
+    Assert.AreEqual(SingleConsonant 't', matches.[2])
+    Assert.AreEqual(LongVowel 'a', matches.[3])

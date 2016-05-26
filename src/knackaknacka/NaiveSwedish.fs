@@ -8,55 +8,65 @@ open System.Text.RegularExpressions
 // and https://en.wikipedia.org/wiki/Swedish_phonology
 // and of course https://twitter.com/DUNSONnDRAGGAN
 
+// We are trying to break any word into a list of graphemes, whose pronounciations 
+// (phonemes) we will then look up.
+type Grapheme =
+    | LongVowel of char 
+    | ShortVowel of char
+    | SingleConsonant of char
+    | Conjunction of string
+    | Unknown of string
+
 // Vowels can be hard or soft. A soft vowel (also known as a front vowel) changes
 // the pronounciation of preciding consonants in some cases. See below in the 
 // consonants list for examples.
-type Vowel = { long : string; short: string; soft : bool }
+type Vowel = { longPronounciation : string; shortPronounciation: string; soft : bool }
 
 // Vowels are assumed to be short before double consonants, long in all other cases. 
 // This is probably an oversimplification
 let vowels = [
-        "a", {long = "ɑː"; short = "a"; soft = false}; 
+        "a", {longPronounciation = "ɑː"; shortPronounciation = "a"; soft = false}; 
         // Some words exceptionally have ⟨e⟩ for /ɛ/, among them words with ⟨ej⟩, 
         // numerals, proper names and their derivations, and loanwords. Before 1889, 
         // ⟨e⟩ for /ɛ/ and /ɛː/ was also used for many other words, in particular 
         // words with ⟨je⟩ now spelled ⟨jä⟩. Many Swedes merge /ɛ/ and /e/.
         // The sound /eː/ at the end of loanwords and in the last syllable of Swedish 
         // surnames is represented by ⟨é⟩.
-        "e", {long = "eː"; short = "ɛ"; soft = true};    
-        "i", {long = "iː"; short = "ɪ"; soft = true};
+        "e", {longPronounciation = "eː"; shortPronounciation = "ɛ"; soft = true};    
+        "i", {longPronounciation = "iː"; shortPronounciation = "ɪ"; soft = true};
         //	The phoneme /ʊ/ is relatively infrequent; short ⟨o⟩ more often represents /ɔ/. 
         // In a few words, long ⟨o⟩ represents /oː/.
-        "o", {long = "uː"; short = "ɔ"; soft = false};    
-        "u", {long = "ʉː"; short = "ɵ"; soft = false};
-        "y", {long = "yː"; short = "ʏ"; soft = true};
+        "o", {longPronounciation = "uː"; shortPronounciation = "ɔ"; soft = false};    
+        "u", {longPronounciation = "ʉː"; shortPronounciation = "ɵ"; soft = false};
+        "y", {longPronounciation = "yː"; shortPronounciation = "ʏ"; soft = true};
         //	Most words with /ɔ/ and some words with /oː/ are spelled with ⟨o⟩.
-        "å", {long = "oː"; short = "ɔ"; soft = false};    
+        "å", {longPronounciation = "oː"; shortPronounciation = "ɔ"; soft = false};    
         //	Some words with /ɛ/ are spelled with ⟨e⟩.
-        "ä", {long = "ɛː"; short = "ɛ"; soft = true};    
+        "ä", {longPronounciation = "ɛː"; shortPronounciation = "ɛ"; soft = true};    
         //	The short ö is, in some dialects, pronounced as /ɵ/.
-        "ö", {long = "øː"; short = "œ"; soft = true};    
+        "ö", {longPronounciation = "øː"; shortPronounciation = "œ"; soft = true};    
         ]
 
-let makeRegexCharacterClass list =
-    "[" + (list |> Seq.distinct |> Seq.fold (+) "") + "]"
+let toCharacterClass strings =
+    "[" + (strings |> Seq.distinct |> Seq.fold (+) "") + "]"
 
-let vowelFilter pred = 
-    vowels  |> Seq.map (fun (s, v) -> s, v.soft) 
-            |> Seq.filter pred 
-            |> Seq.map fst 
-            |> makeRegexCharacterClass
+let vowelCharacterClassFilteredBy predicate = 
+    vowels  
+    |> Seq.map (fun (s, v) -> s, v.soft) 
+    |> Seq.filter predicate 
+    |> Seq.map fst 
+    |> toCharacterClass
 
-let frontVowelRegexCharacterClass = vowelFilter (fun (_, soft) -> soft)
+let softVowelCharacterClass = vowelCharacterClassFilteredBy (fun (_, soft) -> soft)
 
 /// Consonants can be single character or multi-character
 let consonants = [
         "(b)",    "b";
-        // /s/ before front vowels, otherwise /k/. ⟨e i y ä ö⟩. The letter ⟨c⟩ alone 
+        // /s/ before soft vowels, otherwise /k/. ⟨e i y ä ö⟩. The letter ⟨c⟩ alone 
         // is used only in loanwords (usually in the /s/ value) and proper names, 
         // but ⟨ck⟩ is a normal representation for /k/ after a short vowel (as in 
         // English and German).
-        "(c)" + frontVowelRegexCharacterClass, 
+        "(c)" + softVowelCharacterClass, 
                 "s"      
         "(c)",  "k";
         "(ck)", "k";
@@ -69,8 +79,8 @@ let consonants = [
         "(d)",  "d";
         "(dj)", "j";
         "(f)",  "f";
-        // 'g' is /j/ before front vowels ⟨e i y ä ö⟩, otherwise /ɡ/
-        "(g)" + frontVowelRegexCharacterClass, 
+        // 'g' is /j/ before soft vowels ⟨e i y ä ö⟩, otherwise /ɡ/
+        "(g)" + softVowelCharacterClass, 
                 "j";
         "(g)",  "ɡ";     
         "(gj)", "j";
@@ -80,8 +90,8 @@ let consonants = [
         "(h)",  "h";
         "(hj)", "j";
         "(j)",  "j";
-        // 'k' is /ɕ/ before front vowels ⟨e i y ä ö⟩, otherwise /k/
-        "(k)" + frontVowelRegexCharacterClass, 
+        // 'k' is /ɕ/ before soft vowels ⟨e i y ä ö⟩, otherwise /k/
+        "(k)" + softVowelCharacterClass, 
                 "ɕ";  
         "(k)",  "k";
         "(kj)", "ɕ";
@@ -96,8 +106,8 @@ let consonants = [
         "(r)",  "r";
         "(s)",  "s";
         "(sj)", "ɧ";
-        // 'sk' is /ɧ/ before front vowels ⟨e i y ä ö⟩, otherwise /sk/
-        "(sk)" + frontVowelRegexCharacterClass, 
+        // 'sk' is /ɧ/ before soft vowels ⟨e i y ä ö⟩, otherwise /sk/
+        "(sk)" + softVowelCharacterClass, 
                 "ɧ"; 
         "(sk)", "sk";
         "(skj)","ɧ";
@@ -115,48 +125,88 @@ let consonants = [
         "(z)",  "s";     
     ]
 
-let singleConsonantRegexCharacterClass = 
-    consonants  |> Seq.map fst 
-                |> Seq.filter (fun s -> s.Length = 3) 
-                |> Seq.map (fun s -> s.Chars 1)
-                |> Seq.map string
-                |> makeRegexCharacterClass
+let singleConsonantCharacterClass = 
+    consonants  
+    |> Seq.map fst 
+    |> Seq.filter (fun s -> s.Length = 3) 
+    |> Seq.map (fun s -> s.Chars 1) 
+    |> Seq.map string 
+    |> toCharacterClass
 
-let followedByDoubleConsonant = 
-    singleConsonantRegexCharacterClass 
-                |> sprintf "(?<dc>%s)\\k<dc>" 
+let doubleConsonant = 
+    singleConsonantCharacterClass 
+    |> sprintf "(?<dc>%s)\\k<dc>"       // note named backreference
 
-let joinRegexAlternatives (xs:string list) = System.String.Join("|", xs)
+let joinRegexAlternatives (xs:string list) = 
+    System.String.Join("|", xs)
 
-let longPattern x = "(" + x + ")"
+let surroundWithGroup x = "(" + x + ")"
+
 let longLookup = 
-    vowels  |> Seq.map (fun (c, v) -> (longPattern c, v.long)) 
-            |> List.ofSeq
+    vowels  
+    |> Seq.map (fun (s, v) -> (s |> surroundWithGroup, v.longPronounciation)) 
+    |> List.ofSeq
 
-let shortPattern x = longPattern x + followedByDoubleConsonant
+let shortPattern s = (s |> surroundWithGroup) + doubleConsonant
+
 let shortLookup = 
-    vowels  |> Seq.map (fun (c, v) -> (shortPattern c, v.short)) 
-            |> List.ofSeq
+    vowels  
+    |> Seq.map (fun (s, v) -> (shortPattern s, v.shortPronounciation)) 
+    |> List.ofSeq
 
 let allLookups = List.concat([consonants; shortLookup; longLookup])
-let makePattern (xs:(string * string) list) =
-    xs  |> List.map fst 
-        |> List.sortByDescending String.length
-        |> joinRegexAlternatives
 
-// Regex matching
-let (|FirstLevelMatch|_|) pattern input =
+let makePattern (xs:(string * string) list) =
+    xs  
+    |> List.map fst 
+    |> List.sortByDescending String.length
+    |> joinRegexAlternatives
+
+let completePattern = makePattern allLookups
+
+let (|RegexMatch|_|) pattern input =
     if input = null || input.Equals "" then None
     else
-        let metaPattern = sprintf @"(%s){1}(.*)" pattern
-        let m = Regex.Match(input, metaPattern, RegexOptions.Compiled)
-        if m.Success then Some (m.Groups.[1].Value, m.Groups.[m.Groups.Count - 2].Value)
+        let wrappedPattern = sprintf @"(%s){1}(.*)" pattern
+        let m = Regex.Match(input, wrappedPattern)
+        if m.Success then 
+            Some (m.Groups.[1].Value, m.Groups.[m.Groups.Count - 2].Value)
         else None
 
-let ipaTranslate pattern word = 
-    let rec transUtil word acc = 
-        match word with 
-        | FirstLevelMatch pattern (mtch, rest) -> transUtil rest (mtch::acc)
-        | "" -> List.rev acc;    
-    transUtil word [] // |> Seq.fold (+) ""
+let vowelCharacterClass = vowelCharacterClassFilteredBy (fun (_, _) -> true)
 
+let vowelFollowedByDoubleConsonantPattern = 
+    (vowelCharacterClass |> surroundWithGroup) + doubleConsonant
+
+let consonantFollowedBySoftVowelPattern = 
+    (singleConsonantCharacterClass + softVowelCharacterClass) |> surroundWithGroup
+
+let firstChar (s:string) =
+    s.ToCharArray().[0]
+
+let translateToIPA word = 
+    let rec transUtil word acc = 
+        match word with
+        | RegexMatch completePattern (chunk, rest) -> 
+            let acc = match chunk with            // secondary match
+            | RegexMatch vowelFollowedByDoubleConsonantPattern (secondaryMatch, _) -> 
+                let chars = secondaryMatch.ToCharArray()
+                let shortVowel = chars.[0] |> ShortVowel
+                let consonant = chars.[1] |> SingleConsonant
+                (consonant::consonant::shortVowel::acc)
+            | RegexMatch consonantFollowedBySoftVowelPattern (secondaryMatch, _) ->
+                let consonant = 
+                    match secondaryMatch.Length with 
+                    | 1 -> secondaryMatch |> firstChar |> SingleConsonant
+                    | _ -> secondaryMatch |> Conjunction
+                let vowel = rest |> firstChar |> LongVowel
+                (vowel::consonant::acc)
+            | RegexMatch vowelCharacterClass (secondaryMatch, _) ->
+                let vowel = secondaryMatch |> firstChar |> LongVowel
+                (vowel::acc)
+            | RegexMatch singleConsonantCharacterClass (secondaryMatch, _) ->
+                let consonant = secondaryMatch |> firstChar |> SingleConsonant
+                (consonant::acc)
+            transUtil rest acc
+        | "" -> List.rev acc;    
+    [] |> transUtil word // |> Seq.fold (+) ""

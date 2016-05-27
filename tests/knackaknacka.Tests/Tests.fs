@@ -44,3 +44,10 @@ let ``atta is attɑː``() =
     Assert.AreEqual(SingleConsonant 't', matches.[1])
     Assert.AreEqual(SingleConsonant 't', matches.[2])
     Assert.AreEqual(LongVowel 'a', matches.[3])
+
+[<Test>]
+let ``köttbullar is something`` () =
+    let inputString = "köttbullar"
+    let matches = translateToIPA inputString
+    let count = matches |> Seq.length
+    Assert.AreEqual(4, count)

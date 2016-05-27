@@ -8,14 +8,15 @@ open System.Text.RegularExpressions
 // and https://en.wikipedia.org/wiki/Swedish_phonology
 // and of course https://twitter.com/DUNSONnDRAGGAN
 
+
 // We are trying to break any word into a list of graphemes, whose pronounciations 
 // (phonemes) we will then look up.
 type Grapheme =
     | LongVowel of char 
     | ShortVowel of char
+    | SoftableConsonant of char
     | SingleConsonant of char
     | Conjunction of string
-    | Unknown of string
 
 // Vowels can be hard or soft. A soft vowel (also known as a front vowel) changes
 // the pronounciation of preciding consonants in some cases. See below in the 
@@ -50,6 +51,8 @@ let vowels = [
 let toCharacterClass strings =
     "[" + (strings |> Seq.distinct |> Seq.fold (+) "") + "]"
 
+let surroundWithGroup x = "(" + x + ")"
+
 let vowelCharacterClassFilteredBy predicate = 
     vowels  
     |> Seq.map (fun (s, v) -> s, v.soft) 
@@ -60,76 +63,78 @@ let vowelCharacterClassFilteredBy predicate =
 let softVowelCharacterClass = vowelCharacterClassFilteredBy (fun (_, soft) -> soft)
 
 /// Consonants can be single character or multi-character
+let softableConsonants = [
+    // /s/ before soft vowels, ⟨e i y ä ö⟩ otherwise /k/. 
+    "c", "s"     
+    // 'g' is /j/ before soft vowels ⟨e i y ä ö⟩, otherwise /ɡ/
+    "g", "j";
+    // 'k' is /ɕ/ before soft vowels ⟨e i y ä ö⟩, otherwise /k/
+    "k", "ɕ";  
+    // 'sk' is /ɧ/ before soft vowels ⟨e i y ä ö⟩, otherwise /sk/
+    "sk", "ɧ"; 
+]
+
 let consonants = [
-        "(b)",    "b";
-        // /s/ before soft vowels, otherwise /k/. ⟨e i y ä ö⟩. The letter ⟨c⟩ alone 
-        // is used only in loanwords (usually in the /s/ value) and proper names, 
-        // but ⟨ck⟩ is a normal representation for /k/ after a short vowel (as in 
-        // English and German).
-        "(c)" + softVowelCharacterClass, 
-                "s"      
-        "(c)",  "k";
-        "(ck)", "k";
-        "(ch)", "ɕ"; 
-        // REVISIT: Can't distinguish this case
-        // In loanwords. 
-        // "ch", "ɧ";   
-        // The conjunction 'och' (and) is pronounced /ɔk/ or /ɔ/.
-        "(och)","ɔk"; 
-        "(d)",  "d";
-        "(dj)", "j";
-        "(f)",  "f";
-        // 'g' is /j/ before soft vowels ⟨e i y ä ö⟩, otherwise /ɡ/
-        "(g)" + softVowelCharacterClass, 
-                "j";
-        "(g)",  "ɡ";     
-        "(gj)", "j";
-        // 'gn' is /ɡn/ word-initially; /ŋn/ elsewhere
-        "(^gn)","ɡn";  
-        "(gn)", "ŋn";
-        "(h)",  "h";
-        "(hj)", "j";
-        "(j)",  "j";
-        // 'k' is /ɕ/ before soft vowels ⟨e i y ä ö⟩, otherwise /k/
-        "(k)" + softVowelCharacterClass, 
-                "ɕ";  
-        "(k)",  "k";
-        "(kj)", "ɕ";
-        "(l)",  "l";
-        "(lj)", "j";
-        "(m)",  "m";
-        "(n)",  "n";
-        "(ng)", "ŋ";
-        // REVISIT: Can't distinguish this case
-        // "ng", "ŋɡ";
-        "(p)",  "p";
-        "(r)",  "r";
-        "(s)",  "s";
-        "(sj)", "ɧ";
-        // 'sk' is /ɧ/ before soft vowels ⟨e i y ä ö⟩, otherwise /sk/
-        "(sk)" + softVowelCharacterClass, 
-                "ɧ"; 
-        "(sk)", "sk";
-        "(skj)","ɧ";
-        "(stj)","ɧ";
-        "(t)",  "t";
-        "(tj)", "ɕ";
-        // Before 1906, ⟨fv, hv⟩ and final ⟨f⟩ were also used for /v/. 
-        // Now these spellings are used in some proper names.
-        "(v)",  "v";     
-        // 'w' is rarely used (loanwords, proper names). In loanwords from English 
-        // may be pronounced /w/.
-        "(w)",  "v";     
-        "(x)",  "ks"; 
-        // used in loanwords and proper names.
-        "(z)",  "s";     
-    ]
+    "b",    "b";
+    // /s/ before soft vowels, ⟨e i y ä ö⟩ otherwise /k/. The letter ⟨c⟩ alone 
+    // is used only in loanwords (usually in the /s/ value) and proper names, 
+    // but ⟨ck⟩ is a normal representation for /k/ after a short vowel (as in 
+    // English and German).
+    "c",  "k";
+    "ck", "k";
+    "ch", "ɕ"; 
+    // REVISIT: Can't distinguish this case
+    // In loanwords. 
+    // "ch", "ɧ";   
+    // The conjunction 'och' (and) is pronounced /ɔk/ or /ɔ/.
+    "och","ɔk"; 
+    "d",  "d";
+    "dj", "j";
+    "f",  "f";
+    // 'g' is /j/ before soft vowels ⟨e i y ä ö⟩, otherwise /ɡ/
+    "g",  "ɡ";     
+    "gj", "j";
+    // 'gn' is /ɡn/ word-initially; /ŋn/ elsewhere
+    "^gn","ɡn";  
+    "gn", "ŋn";
+    "h",  "h";
+    "hj", "j";
+    "j",  "j";
+    // 'k' is /ɕ/ before soft vowels ⟨e i y ä ö⟩, otherwise /k/
+    "k",  "k";
+    "kj", "ɕ";
+    "l",  "l";
+    "lj", "j";
+    "m",  "m";
+    "n",  "n";
+    "ng", "ŋ";
+    // REVISIT: Can't distinguish this case
+    // "ng", "ŋɡ";
+    "p",  "p";
+    "r",  "r";
+    "s",  "s";
+    "sj", "ɧ";
+    // 'sk' is /ɧ/ before soft vowels ⟨e i y ä ö⟩, otherwise /sk/
+    "sk", "sk";
+    "skj","ɧ";
+    "stj","ɧ";
+    "t",  "t";
+    "tj", "ɕ";
+    // Before 1906, ⟨fv, hv⟩ and final ⟨f⟩ were also used for /v/. 
+    // Now these spellings are used in some proper names.
+    "v",  "v";     
+    // 'w' is rarely used (loanwords, proper names). In loanwords from English 
+    // may be pronounced /w/.
+    "w",  "v";     
+    "x",  "ks"; 
+    // used in loanwords and proper names.
+    "z",  "s";     
+]
 
 let singleConsonantCharacterClass = 
     consonants  
     |> Seq.map fst 
-    |> Seq.filter (fun s -> s.Length = 3) 
-    |> Seq.map (fun s -> s.Chars 1) 
+    |> Seq.filter (fun s -> s.Length = 1) 
     |> Seq.map string 
     |> toCharacterClass
 
@@ -140,25 +145,34 @@ let doubleConsonant =
 let joinRegexAlternatives (xs:string list) = 
     System.String.Join("|", xs)
 
-let surroundWithGroup x = "(" + x + ")"
-
-let longLookup = 
+let longVowelList = 
     vowels  
-    |> Seq.map (fun (s, v) -> (s |> surroundWithGroup, v.longPronounciation)) 
+    |> Seq.map (fun (s, _) -> s |> surroundWithGroup) 
     |> List.ofSeq
 
 let shortPattern s = (s |> surroundWithGroup) + doubleConsonant
 
-let shortLookup = 
+let shortVowelList = 
     vowels  
-    |> Seq.map (fun (s, v) -> (shortPattern s, v.shortPronounciation)) 
+    |> Seq.map (fun (s, _) -> shortPattern s) 
     |> List.ofSeq
 
-let allLookups = List.concat([consonants; shortLookup; longLookup])
+let prepConsonant t =
+    t |> fst |> surroundWithGroup 
 
-let makePattern (xs:(string * string) list) =
+let consonantList = 
+    consonants |> List.map prepConsonant |> List.ofSeq
+
+let followedBySoftVowel cs =
+    cs + softVowelCharacterClass
+
+let softableConsonantList = 
+    softableConsonants |> List.map prepConsonant |> List.map followedBySoftVowel |> List.ofSeq
+
+let allLookups = List.concat([consonantList; softableConsonantList; shortVowelList; longVowelList])
+
+let makePattern xs =
     xs  
-    |> List.map fst 
     |> List.sortByDescending String.length
     |> joinRegexAlternatives
 
@@ -195,11 +209,9 @@ let translateToIPA word =
                 let consonant = chars.[1] |> SingleConsonant
                 (consonant::consonant::shortVowel::acc)
             | RegexMatch consonantFollowedBySoftVowelPattern (secondaryMatch, _) ->
-                let consonant = 
-                    match secondaryMatch.Length with 
-                    | 1 -> secondaryMatch |> firstChar |> SingleConsonant
-                    | _ -> secondaryMatch |> Conjunction
-                let vowel = rest |> firstChar |> LongVowel
+                let chars = secondaryMatch.ToCharArray()
+                let consonant = chars.[0] |> SoftableConsonant
+                let vowel = chars.[1] |> LongVowel
                 (vowel::consonant::acc)
             | RegexMatch vowelCharacterClass (secondaryMatch, _) ->
                 let vowel = secondaryMatch |> firstChar |> LongVowel

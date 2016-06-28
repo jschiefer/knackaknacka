@@ -1,4 +1,5 @@
-﻿#r "System.Speech.dll"
+﻿
+#r "System.Speech.dll"
 
 #load "NaiveSwedish.fs"
 #load "Speaker.fs"
@@ -19,4 +20,17 @@ knackaknacka.Speaker.synth.GetInstalledVoices()
 
 translateToIPA "köttbullar"
 
-#r "pack
+#I "../../packages/build/FParsec/lib/net40-client/"
+#r "FParsec"
+#r "FParsecCS"
+open FParsec
+
+let test p str =
+    match run p str with
+    | Success(result, _, _)   -> printfn "Success: %A" result
+    | Failure(errorMsg, _, _) -> printfn "Failure: %s" errorMsg
+
+test pfloat "-inf"
+
+let str s = pstring s
+let floatBetweenBrackets = str "[" >>. pfloat .>> str "]"

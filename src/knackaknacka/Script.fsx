@@ -19,3 +19,4 @@ knackaknacka.Speaker.synth.GetInstalledVoices()
 
 translateToIPA "köttbullar"
 
+#r "pack

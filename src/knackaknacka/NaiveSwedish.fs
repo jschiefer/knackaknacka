@@ -163,8 +163,8 @@ let prepConsonant t =
 let consonantList = 
     consonants |> List.map prepConsonant |> List.ofSeq
 
-let followedBySoftVowel cs =
-    cs + softVowelCharacterClass
+let followedBySoftVowel consonant =
+    consonant + softVowelCharacterClass
 
 let softableConsonantList = 
     softableConsonants |> List.map prepConsonant |> List.map followedBySoftVowel |> List.ofSeq
@@ -202,23 +202,30 @@ let translateToIPA word =
     let rec transUtil word acc = 
         match word with
         | RegexMatch completePattern (chunk, rest) -> 
-            let acc = match chunk with            // secondary match
-            | RegexMatch vowelFollowedByDoubleConsonantPattern (secondaryMatch, _) -> 
-                let chars = secondaryMatch.ToCharArray()
-                let shortVowel = chars.[0] |> ShortVowel
-                let consonant = chars.[1] |> SingleConsonant
-                (consonant::consonant::shortVowel::acc)
-            | RegexMatch consonantFollowedBySoftVowelPattern (secondaryMatch, _) ->
-                let chars = secondaryMatch.ToCharArray()
-                let consonant = chars.[0] |> SoftableConsonant
-                let vowel = chars.[1] |> LongVowel
-                (vowel::consonant::acc)
-            | RegexMatch vowelCharacterClass (secondaryMatch, _) ->
-                let vowel = secondaryMatch |> firstChar |> LongVowel
-                (vowel::acc)
-            | RegexMatch singleConsonantCharacterClass (secondaryMatch, _) ->
-                let consonant = secondaryMatch |> firstChar |> SingleConsonant
-                (consonant::acc)
+            let acc = 
+                match chunk with // secondary match
+                | RegexMatch vowelFollowedByDoubleConsonantPattern (secondaryMatch, _) -> 
+                    let chars = secondaryMatch.ToCharArray()
+                    let shortVowel = chars.[0] |> ShortVowel
+                    let consonant = chars.[1] |> SingleConsonant
+                    (consonant :: consonant :: shortVowel :: acc)
+                | RegexMatch consonantFollowedBySoftVowelPattern (secondaryMatch, _) -> 
+                    let chars = secondaryMatch.ToCharArray()
+                    let consonant = chars.[0] |> SoftableConsonant
+                    let vowel = chars.[1] |> LongVowel
+                    (vowel :: consonant :: acc)
+                | RegexMatch vowelCharacterClass (secondaryMatch, _) -> 
+                    let vowel = 
+                        secondaryMatch
+                        |> firstChar
+                        |> LongVowel
+                    (vowel :: acc)
+                | RegexMatch singleConsonantCharacterClass (secondaryMatch, _) -> 
+                    let consonant = 
+                        secondaryMatch
+                        |> firstChar
+                        |> SingleConsonant
+                    (consonant :: acc)
             transUtil rest acc
-        | "" -> List.rev acc;    
+        | "" -> List.rev acc
     [] |> transUtil word // |> Seq.fold (+) ""

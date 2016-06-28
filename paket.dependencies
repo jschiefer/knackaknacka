@@ -6,7 +6,7 @@ group Build
   nuget SourceLink.Fake
   nuget FAKE
   nuget FSharp.Formatting
-
+  nuget FParsec
   github fsharp/FAKE modules/Octokit/Octokit.fsx
 
 group Test
